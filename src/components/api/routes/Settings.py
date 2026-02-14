@@ -1,6 +1,7 @@
 from ...backend import Core
 
 from apiflask import APIBlueprint, abort, fields
+from datetime import datetime
 
 def Settings(core:Core) -> APIBlueprint:
 
@@ -27,7 +28,17 @@ def Settings(core:Core) -> APIBlueprint:
 		if setting not in core.settings:
 			abort(400, f"L'impostazione '{setting}' non esiste.")
 
-		core.settings[setting] = json_data['value']
+		value = json_data['value']
+
+		if setting in ("ActiveWindowStart", "ActiveWindowEnd"):
+			if not isinstance(value, str):
+				abort(400, f"'{setting}' deve essere una stringa nel formato HH:MM.")
+			try:
+				datetime.strptime(value, "%H:%M")
+			except ValueError:
+				abort(400, f"'{setting}' non è nel formato valido HH:MM.")
+
+		core.settings[setting] = value
 
 		return {'message': f"Impostazione '{setting}' aggiornata."}
 

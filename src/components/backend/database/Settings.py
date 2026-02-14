@@ -3,25 +3,41 @@ from .Database import Database
 from typing import Literal
 
 class Settings(Database):
-	def __getitem__(self, key: Literal["AutoBind","LogLevel","MoveEp","RenameEp","ScanDelay","TagsMode"]):
+	def __getitem__(self, key: Literal["AutoBind","LogLevel","MoveEp","RenameEp","ScanDelay","TagsMode","ScheduleEnabled","ActiveWindowStart","ActiveWindowEnd"]):
 		return self._data[key]
 	
-	def __setitem__(self, key: Literal["AutoBind","LogLevel","MoveEp","RenameEp","ScanDelay","TagsMode"], value):
+	def __setitem__(self, key: Literal["AutoBind","LogLevel","MoveEp","RenameEp","ScanDelay","TagsMode","ScheduleEnabled","ActiveWindowStart","ActiveWindowEnd"], value):
 		if key not in self._data: raise KeyError(key)
 
 		self._data[key] = value
 		self.sync()
 	
 	def fix(self) -> None:
-		if not self.db.exists() or self.db.stat().st_size == 0: 
-			self.write({
-				"AutoBind": True,
-				"LogLevel": "DEBUG",
-				"MoveEp": True,
-				"RenameEp": True,
-				"ScanDelay": 30,
-				"TagsMode": "WHITELIST"
-			})
+		defaults = {
+			"AutoBind": True,
+			"LogLevel": "DEBUG",
+			"MoveEp": True,
+			"RenameEp": True,
+			"ScanDelay": 30,
+			"TagsMode": "WHITELIST",
+			"ScheduleEnabled": False,
+			"ActiveWindowStart": "03:00",
+			"ActiveWindowEnd": "07:00"
+		}
+
+		if not self.db.exists() or self.db.stat().st_size == 0:
+			self.write(defaults)
+			return
+
+		data = self.read()
+		updated = False
+		for key, value in defaults.items():
+			if key not in data:
+				data[key] = value
+				updated = True
+
+		if updated:
+			self.write(data)
 	
 	def __iter__(self):
 		for key in self._data:

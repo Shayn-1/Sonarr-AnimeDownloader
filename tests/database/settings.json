@@ -1,1 +1,1 @@
-{"AutoBind": true, "LogLevel": "DEBUG", "MoveEp": true, "RenameEp": true, "ScanDelay": 30, "TagsMode": "BLACKLIST"}
+{"AutoBind": true, "LogLevel": "DEBUG", "MoveEp": true, "RenameEp": true, "ScanDelay": 30, "TagsMode": "BLACKLIST", "ScheduleEnabled": false, "ActiveWindowStart": "03:00", "ActiveWindowEnd": "07:00"}

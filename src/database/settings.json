@@ -4,5 +4,8 @@
 	"RenameEp": true,
 	"AutoBind": false,
 	"ScanDelay": 30,
-	"TagsMode": "BLACKLIST"
+	"TagsMode": "BLACKLIST",
+	"ScheduleEnabled": false,
+	"ActiveWindowStart": "03:00",
+	"ActiveWindowEnd": "07:00"
 }

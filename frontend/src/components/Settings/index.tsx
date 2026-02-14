@@ -119,6 +119,52 @@ function SettingCard({ api }: SettingsProps) {
 
                     </fieldset>
 
+                    <fieldset>
+                        <legend>Finestra Oraria</legend>
+                        <div>
+                            <input type="checkbox" name="ScheduleEnabled" id="ScheduleEnabled" checked={settings.ScheduleEnabled} onChange={e => {
+                                setSettings({ ...settings, ScheduleEnabled: e.target.checked });
+                                api.editSettings("ScheduleEnabled", e.target.checked)
+                                    .then(res => toast.success(res.message));
+                            }} />
+                            <label htmlFor="ScheduleEnabled">Abilita limitazione oraria</label>
+                        </div>
+
+                        <div>
+                            <label htmlFor="ActiveWindowStart">Inizio</label>
+                            <input
+                                type="time"
+                                name="ActiveWindowStart"
+                                id="ActiveWindowStart"
+                                value={settings.ActiveWindowStart}
+                                onChange={e => {
+                                    if (e.target.checkValidity()) {
+                                        setSettings({ ...settings, ActiveWindowStart: e.target.value });
+                                        api.editSettings("ActiveWindowStart", e.target.value)
+                                            .then(res => toast.success(res.message));
+                                    }
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="ActiveWindowEnd">Fine</label>
+                            <input
+                                type="time"
+                                name="ActiveWindowEnd"
+                                id="ActiveWindowEnd"
+                                value={settings.ActiveWindowEnd}
+                                onChange={e => {
+                                    if (e.target.checkValidity()) {
+                                        setSettings({ ...settings, ActiveWindowEnd: e.target.value });
+                                        api.editSettings("ActiveWindowEnd", e.target.value)
+                                            .then(res => toast.success(res.message));
+                                    }
+                                }}
+                            />
+                        </div>
+                    </fieldset>
+
                     <button onClick={() => {
                         api.putWekeup()
                             .then(res => toast(res.message));

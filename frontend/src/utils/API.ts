@@ -22,7 +22,7 @@ export class API {
         return await res.json();
     }
 
-    async editSettings(setting:"AutoBind"|"LogLevel"|"MoveEp"|"RenameEp"|"ScanDelay"|"TagsMode", value:any): Promise<ResponseMsg>{
+    async editSettings(setting:"AutoBind"|"LogLevel"|"MoveEp"|"RenameEp"|"ScanDelay"|"TagsMode"|"ScheduleEnabled"|"ActiveWindowStart"|"ActiveWindowEnd", value:any): Promise<ResponseMsg>{
         const res = await fetch(encodeURI(this.backend + `/settings/${setting}`), {
             method: "PATCH",
             headers: {
@@ -232,7 +232,10 @@ export interface SettingsOptions {
     MoveEp: boolean,
     RenameEp: boolean,
     ScanDelay: number,
-    TagsMode: "BLACKLIST" | "WHITELIST"
+    TagsMode: "BLACKLIST" | "WHITELIST",
+    ScheduleEnabled: boolean,
+    ActiveWindowStart: string,
+    ActiveWindowEnd: string
 }
 
 export interface TagValue {

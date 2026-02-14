@@ -9,6 +9,7 @@ import logging, logging.handlers
 import sys, threading
 import time
 from typing import Optional
+from datetime import datetime
 import httpx
 import animeworld as aw
 
@@ -164,6 +165,10 @@ class Core(threading.Thread):
 		"""
 
 		try:
+			if not self.__canRunNow():
+				self.log.info(cs.yellow("⏸ Fuori dalla finestra oraria impostata: refresh e download saltati."))
+				return
+
 			self.log.info("")
 
 			missing = self.processor.getData()
@@ -183,6 +188,35 @@ class Core(threading.Thread):
 				self.log.info("")
 		except aw.DeprecatedLibrary as e:
 			self.log.error(cs.red(f"🅴🆁🆁🅾🆁: {e}"))
+
+	def __canRunNow(self) -> bool:
+		"""Verifica se l'esecuzione è consentita in base alla finestra oraria."""
+
+		if not self.settings["ScheduleEnabled"]:
+			return True
+
+		start_raw = self.settings["ActiveWindowStart"]
+		end_raw = self.settings["ActiveWindowEnd"]
+
+		try:
+			start = datetime.strptime(start_raw, "%H:%M").time()
+			end = datetime.strptime(end_raw, "%H:%M").time()
+		except ValueError:
+			self.log.warning(cs.yellow("Formato orario non valido nelle impostazioni: uso modalità sempre attiva."))
+			return True
+
+		now = datetime.now().time()
+
+		# Stesso orario di inizio/fine = finestra aperta h24
+		if start == end:
+			return True
+
+		# Caso classico: es. 03:00 -> 07:00
+		if start < end:
+			return start <= now < end
+
+		# Caso overnight: es. 22:00 -> 06:00
+		return now >= start or now < end
 				
 	def wakeUp(self) -> bool:
 		"""
