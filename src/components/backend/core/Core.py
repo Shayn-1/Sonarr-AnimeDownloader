@@ -9,7 +9,7 @@ import logging, logging.handlers
 import sys, threading
 import time
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import httpx
 import animeworld as aw
 
@@ -41,6 +41,7 @@ class Core(threading.Thread):
 		super().__init__(name=self.__class__.__name__, daemon=True)
 
 		self.semaphore = threading.Condition()
+		self.force_run_once = False
 		self.version = ctx.VERSION
 
 		### Setup logger ###
@@ -141,13 +142,18 @@ class Core(threading.Thread):
 
 		try:
 			while True:
-				start = time.time()
+				force_run = self.force_run_once
+				self.force_run_once = False
+
 				self.log.info(f"╭───────────────────────────────────「{time.strftime('%d %b %Y %H:%M:%S')}」───────────────────────────────────╮")
 
-				self.job()
+				if (not force_run) and self.settings["ScheduleEnabled"] and (not self.__canRunNow()):
+					self.log.info(cs.yellow("⌛ Fuori finestra: in attesa del prossimo orario utile."))
+				else:
+					self.job(ignore_schedule=force_run)
 				
-				next_run = self.settings['ScanDelay']*60 + start
-				wait = next_run - time.time()
+				wait = self.__nextWaitSeconds()
+				next_run = time.time() + wait
 				self.log.info(f"╰───────────────────────────────────「{time.strftime('%d %b %Y %H:%M:%S', time.localtime(next_run))}」───────────────────────────────────╯")
 				self.log.info("")
 
@@ -159,13 +165,15 @@ class Core(threading.Thread):
 			self.log.exception(e)
 			self.error = e
 
-	def job(self):
+	def job(self, *, ignore_schedule:bool=False):
 		"""
 		Processo principale di ricerca e download.
 		"""
 
 		try:
-			if not self.__canRunNow():
+			if ignore_schedule:
+				self.log.info(cs.yellow("▶ Avvio manuale: scheduler ignorato per questa scansione."))
+			elif not self.__canRunNow():
 				self.log.info(cs.yellow("⏸ Fuori dalla finestra oraria impostata: refresh e download saltati."))
 				return
 
@@ -217,14 +225,84 @@ class Core(threading.Thread):
 
 		# Caso overnight: es. 22:00 -> 06:00
 		return now >= start or now < end
+
+	def __nextWaitSeconds(self) -> float:
+		"""Calcola il tempo di attesa prima del prossimo controllo."""
+
+		scan_delay = max(1, self.settings["ScanDelay"] * 60)
+		if not self.settings["ScheduleEnabled"]:
+			return scan_delay
+
+		window = self.__getScheduleWindow()
+		if window is None:
+			return scan_delay
+
+		start, end = window
+		now = datetime.now()
+		now_t = now.time()
+
+		if self.__isInsideWindow(now_t, start, end):
+			seconds_to_end = self.__secondsToWindowEnd(now, start, end)
+			return max(1, min(scan_delay, seconds_to_end))
+
+		return max(1, self.__secondsToNextWindowStart(now, start))
+
+	def __getScheduleWindow(self):
+		"""Restituisce la finestra oraria valida oppure None in caso di errore."""
+
+		start_raw = self.settings["ActiveWindowStart"]
+		end_raw = self.settings["ActiveWindowEnd"]
+		try:
+			start = datetime.strptime(start_raw, "%H:%M").time()
+			end = datetime.strptime(end_raw, "%H:%M").time()
+			return start, end
+		except ValueError:
+			self.log.warning(cs.yellow("Formato orario non valido nelle impostazioni: uso modalità sempre attiva."))
+			return None
+
+	def __isInsideWindow(self, now_t, start, end) -> bool:
+		"""Controlla se un orario è dentro la finestra."""
+
+		if start == end:
+			return True
+		if start < end:
+			return start <= now_t < end
+		return now_t >= start or now_t < end
+
+	def __secondsToNextWindowStart(self, now:datetime, start) -> float:
+		"""Secondi mancanti al prossimo inizio finestra."""
+
+		next_start = now.replace(hour=start.hour, minute=start.minute, second=0, microsecond=0)
+		if next_start <= now:
+			next_start += timedelta(days=1)
+		return (next_start - now).total_seconds()
+
+	def __secondsToWindowEnd(self, now:datetime, start, end) -> float:
+		"""Secondi mancanti alla fine della finestra corrente."""
+
+		if start == end:
+			return self.settings["ScanDelay"] * 60
+
+		end_dt = now.replace(hour=end.hour, minute=end.minute, second=0, microsecond=0)
+
+		if start < end:
+			if end_dt <= now:
+				end_dt += timedelta(days=1)
+			return (end_dt - now).total_seconds()
+
+		if now.time() >= start:
+			end_dt += timedelta(days=1)
+		return (end_dt - now).total_seconds()
 				
-	def wakeUp(self) -> bool:
+	def wakeUp(self, *, force:bool=False) -> bool:
 		"""
 		Fa partire immediatamente il processo di ricerca e download.
 		"""
 		try:
 			# acquire lock
 			self.semaphore.acquire()
+			if force:
+				self.force_run_once = True
 			# resume thread
 			self.semaphore.notify()
 			# release lock

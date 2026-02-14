@@ -43,7 +43,7 @@ def API(core:Core) -> APIFlask:
 		"""
 		Forza l'avvio di una nuova scansione.
 		"""
-		if core.wakeUp():
+		if core.wakeUp(force=True):
 			return {"message": "Scansione avviata."}
 		else:
 			return {"message": "Scansione in corso."}

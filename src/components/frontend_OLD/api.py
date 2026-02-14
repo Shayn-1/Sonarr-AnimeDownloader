@@ -10,7 +10,7 @@ def loadAPI(app:Flask):
 
 	@app.route('/api/rescan', methods=['GET'])
 	def rescan():
-		result = core.wakeUp()
+		result = core.wakeUp(force=True)
 		return Response(
 			mimetype='application/json',
 			status=200,
