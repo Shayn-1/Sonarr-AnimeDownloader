@@ -109,6 +109,20 @@
 					<input type="range" id="ScanDelay" name="ScanDelay" min="30" max="300" value="30" step="15">
 					<label for="ScanDelay">30</label>
 				</div>
+
+				<div class="content" style="grid-area: g;">
+					<h2>Finestra Oraria</h2>
+					<label for="ScheduleEnabled" class="switch">
+						Off
+						<input type="checkbox" id="ScheduleEnabled" name="ScheduleEnabled" value="true">
+						<span></span>
+						On
+					</label>
+					<label for="ActiveWindowStart">Inizio</label>
+					<input type="time" id="ActiveWindowStart" name="ActiveWindowStart" value="03:00">
+					<label for="ActiveWindowEnd">Fine</label>
+					<input type="time" id="ActiveWindowEnd" name="ActiveWindowEnd" value="07:00">
+				</div>
 			</div>
 			<section class="bottom">
 				<a class="btn" href="/ie/settings" target="_blank">&#xf090;</a>

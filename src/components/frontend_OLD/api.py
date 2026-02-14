@@ -143,24 +143,33 @@ def loadAPI(app:Flask):
 		data = request.json
 
 		log = "ERRORE"
-		if data["AutoBind"]:
+		if data.get("AutoBind") is not None:
 			core.settings["AutoBind"] = data["AutoBind"]
 			log = "Auto Ricerca Link aggiornato."
-		elif data["LogLevel"]:
+		elif data.get("LogLevel") is not None:
 			core.settings["LogLevel"] = data["LogLevel"]
 			log = "Livello del Log aggiornato."
-		elif data["MoveEp"]:
+		elif data.get("MoveEp") is not None:
 			core.settings["MoveEp"] = data["MoveEp"]
 			log = "Sposta Episodi aggiornato."
-		elif data["RenameEp"]:
+		elif data.get("RenameEp") is not None:
 			core.settings["RenameEp"] = data["RenameEp"]
 			log = "Rinomina Episodi aggiornato."
-		elif data["ScanDelay"]:
+		elif data.get("ScanDelay") is not None:
 			core.settings["ScanDelay"] = data["ScanDelay"]
 			log = "Intervallo Scan aggiornato."
-		elif data["TagsMode"]:
+		elif data.get("TagsMode") is not None:
 			core.settings["TagsMode"] = data["TagsMode"]
-			log = "Modalità tags aggiornata."
+			log = "Modalita tags aggiornata."
+		elif data.get("ScheduleEnabled") is not None:
+			core.settings["ScheduleEnabled"] = data["ScheduleEnabled"]
+			log = "Abilitazione finestra oraria aggiornata."
+		elif data.get("ActiveWindowStart") is not None:
+			core.settings["ActiveWindowStart"] = data["ActiveWindowStart"]
+			log = "Orario di inizio aggiornato."
+		elif data.get("ActiveWindowEnd") is not None:
+			core.settings["ActiveWindowEnd"] = data["ActiveWindowEnd"]
+			log = "Orario di fine aggiornato."
 
 		return Response(
 			mimetype='application/json',

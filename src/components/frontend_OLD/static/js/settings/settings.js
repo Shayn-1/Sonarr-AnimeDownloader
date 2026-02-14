@@ -8,9 +8,12 @@ function syncData(){
 		document.getElementById('RenameEp').checked = res.data.RenameEp;
 		document.getElementById('MoveEp').checked = res.data.MoveEp;
 		document.getElementById('AutoBind').checked = res.data.AutoBind;
+		document.getElementById('ScheduleEnabled').checked = !!res.data.ScheduleEnabled;
 
 		document.getElementById('ScanDelay').value = res.data.ScanDelay;
 		document.querySelector("#ScanDelay + label").textContent = res.data.ScanDelay;
+		document.getElementById('ActiveWindowStart').value = res.data.ActiveWindowStart || "03:00";
+		document.getElementById('ActiveWindowEnd').value = res.data.ActiveWindowEnd || "07:00";
 
 		for(let elem of document.querySelectorAll('input[name=LogLevel]')){
 			elem.checked = elem.value == res.data.LogLevel;
@@ -39,7 +42,10 @@ function updateSettings(data){
 			MoveEp: data.hasOwnProperty('MoveEp') ? data.MoveEp : null,
 			RenameEp: data.hasOwnProperty('RenameEp') ? data.RenameEp : null,
 			ScanDelay: data.hasOwnProperty('ScanDelay') ? data.ScanDelay : null,
-			TagsMode: data.hasOwnProperty('TagsMode') ? data.TagsMode : null
+			TagsMode: data.hasOwnProperty('TagsMode') ? data.TagsMode : null,
+			ScheduleEnabled: data.hasOwnProperty('ScheduleEnabled') ? data.ScheduleEnabled : null,
+			ActiveWindowStart: data.hasOwnProperty('ActiveWindowStart') ? data.ActiveWindowStart : null,
+			ActiveWindowEnd: data.hasOwnProperty('ActiveWindowEnd') ? data.ActiveWindowEnd : null
 		})
 	})
 	.then(response => response.json())
@@ -58,6 +64,15 @@ document.getElementById('MoveEp').addEventListener('change', function(event){
 });
 document.getElementById('AutoBind').addEventListener('change', function(event){
 	updateSettings({AutoBind: this.checked});
+});
+document.getElementById('ScheduleEnabled').addEventListener('change', function(event){
+	updateSettings({ScheduleEnabled: this.checked});
+});
+document.getElementById('ActiveWindowStart').addEventListener('change', function(event){
+	updateSettings({ActiveWindowStart: this.value});
+});
+document.getElementById('ActiveWindowEnd').addEventListener('change', function(event){
+	updateSettings({ActiveWindowEnd: this.value});
 });
 for(let elem of document.querySelectorAll('input[name=LogLevel]')){
 	elem.addEventListener('change', function(event){
