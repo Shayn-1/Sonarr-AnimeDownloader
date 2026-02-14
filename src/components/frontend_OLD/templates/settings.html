@@ -110,7 +110,7 @@
 					<label for="ScanDelay">30</label>
 				</div>
 
-				<div class="content" style="grid-area: g;">
+				<div class="content" id="schedule-window" style="grid-area: g;">
 					<h2>Finestra Oraria</h2>
 					<label for="ScheduleEnabled" class="switch">
 						Off
@@ -118,10 +118,14 @@
 						<span></span>
 						On
 					</label>
-					<label for="ActiveWindowStart">Inizio</label>
-					<input type="time" id="ActiveWindowStart" name="ActiveWindowStart" value="03:00">
-					<label for="ActiveWindowEnd">Fine</label>
-					<input type="time" id="ActiveWindowEnd" name="ActiveWindowEnd" value="07:00">
+					<div class="time-row">
+						<label for="ActiveWindowStart">Inizio</label>
+						<input type="time" id="ActiveWindowStart" name="ActiveWindowStart" value="03:00">
+					</div>
+					<div class="time-row">
+						<label for="ActiveWindowEnd">Fine</label>
+						<input type="time" id="ActiveWindowEnd" name="ActiveWindowEnd" value="07:00">
+					</div>
 				</div>
 			</div>
 			<section class="bottom">
