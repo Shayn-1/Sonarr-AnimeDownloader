@@ -252,7 +252,7 @@ class Tab extends React.Component {
       autoFocus: true,
       className: "add-tab",
       type: "number",
-      min: "1",
+      min: "0",
       placeholder: this.props.season,
       value: this.state.value,
       onChange: event => this.setState({
@@ -423,7 +423,7 @@ class AddSeasonButton extends React.Component {
       type: "number",
       placeholder: "Season",
       className: "add-tab",
-      min: "1",
+      min: "0",
       value: this.state.value,
       onChange: event => this.setState({
         value: event.target.value

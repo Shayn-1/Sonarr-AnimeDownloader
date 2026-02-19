@@ -69,7 +69,7 @@ def loadAPI(app:Flask):
 			if link:
 				core.table.removeUrl(title, season, link)
 				log = "Url rimosso."
-			elif season:
+			elif season is not None:
 				core.table.removeSeason(title, season)
 				log = f"Stagione {season} rimossa."
 			else:
@@ -103,7 +103,7 @@ def loadAPI(app:Flask):
 					log = "Url modificato."
 				else:
 					log = "Errore nella modifica dell'url."
-			elif season:
+			elif season is not None:
 				if core.table.renameSeason(title, season[0], season[1]):
 					log = f"Stagione {season[0]} modificata."
 				else:
