@@ -3,6 +3,23 @@
 var addData;
 var syncData;
 
+function normalizeSeasonValue(value) {
+  const raw = String(value ?? '').trim();
+  if (!/^\d+$/.test(raw)) return null;
+  return String(parseInt(raw, 10));
+}
+
+function sortSeasonKeys(keys) {
+  return [...keys].sort((a, b) => {
+    const aNum = /^\d+$/.test(a);
+    const bNum = /^\d+$/.test(b);
+    if (aNum && bNum) return parseInt(a, 10) - parseInt(b, 10);
+    if (aNum) return -1;
+    if (bNum) return 1;
+    return a.localeCompare(b);
+  });
+}
+
 class Table extends React.Component {
   constructor(props) {
     super(props);
@@ -192,11 +209,13 @@ class TableRowBody extends React.Component {
   }
 
   render() {
+    const orderedSeasons = sortSeasonKeys(Object.keys(this.props.seasons));
+
     return /*#__PURE__*/React.createElement("div", {
       className: "content"
     }, /*#__PURE__*/React.createElement("div", {
       className: "tabs"
-    }, Object.keys(this.props.seasons).map((season, index) => /*#__PURE__*/React.createElement(Tab, {
+    }, orderedSeasons.map((season, index) => /*#__PURE__*/React.createElement(Tab, {
       season: season,
       active: index == this.state.tab_active,
       key: index,
@@ -209,7 +228,7 @@ class TableRowBody extends React.Component {
       onAddData: this.props.onAddData
     })), /*#__PURE__*/React.createElement("div", {
       className: "tabs-content"
-    }, Object.keys(this.props.seasons).map((season, index) => /*#__PURE__*/React.createElement(TabContent, {
+    }, orderedSeasons.map((season, index) => /*#__PURE__*/React.createElement(TabContent, {
       links: this.props.seasons[season],
       active: index == this.state.tab_active,
       key: index,
@@ -231,15 +250,23 @@ class Tab extends React.Component {
   }
 
   render() {
+    const isNumericSeason = /^\d+$/.test(this.props.season);
+
     return this.state.edit ? /*#__PURE__*/React.createElement("form", {
       style: {
         display: "inline"
       },
       onSubmit: event => {
         event.preventDefault();
-        this.props.onEditData([this.props.season, this.state.value]);
+        const normalized = isNumericSeason ? normalizeSeasonValue(this.state.value) : String(this.state.value ?? '').trim();
+        if (!normalized) {
+          showToast("Numero stagione non valido.");
+          return;
+        }
+        this.props.onEditData([this.props.season, normalized]);
         this.setState({
-          edit: false
+          edit: false,
+          value: normalized
         });
       },
       onKeyDown: event => {
@@ -251,8 +278,9 @@ class Tab extends React.Component {
     }, /*#__PURE__*/React.createElement("input", {
       autoFocus: true,
       className: "add-tab",
-      type: "number",
-      min: "0",
+      type: isNumericSeason ? "number" : "text",
+      min: isNumericSeason ? "0" : undefined,
+      step: isNumericSeason ? "1" : undefined,
       placeholder: this.props.season,
       value: this.state.value,
       onChange: event => this.setState({
@@ -406,7 +434,12 @@ class AddSeasonButton extends React.Component {
     return /*#__PURE__*/React.createElement(React.Fragment, null, this.state.active && /*#__PURE__*/React.createElement("form", {
       onSubmit: event => {
         event.preventDefault();
-        this.props.onAddData(this.state.value, []);
+        const normalized = normalizeSeasonValue(this.state.value);
+        if (!normalized) {
+          showToast("Numero stagione non valido.");
+          return;
+        }
+        this.props.onAddData(normalized, []);
         this.setState({
           active: false,
           value: ''
@@ -424,6 +457,7 @@ class AddSeasonButton extends React.Component {
       placeholder: "Season",
       className: "add-tab",
       min: "0",
+      step: "1",
       value: this.state.value,
       onChange: event => this.setState({
         value: event.target.value
