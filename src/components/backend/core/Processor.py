@@ -113,9 +113,9 @@ class Processor:
 		def filterSeason(season:dict) -> bool:
 			"""Filtra le stagioni."""
 			# Controllo che non siano episodi speciali
-			if season["number"] == 0:
-				self.log.debug(f"❌ Stagione {season['number']} della serie '{elem['title']}' scartata perchè contiene episodi speciali.")
-				return False
+			#if season["number"] == 0:
+			#	self.log.debug(f"❌ Stagione {season['number']} della serie '{elem['title']}' scartata perchè contiene episodi speciali.")
+			#	return False
 
 			return True
 
