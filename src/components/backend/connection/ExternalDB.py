@@ -50,14 +50,23 @@ class ExternalDB:
 		  Un dizionario con nome e url trovato.
 		"""
 
-		# Ottengo un elenco di ID di MyAnimeList che fanno match
+		# Ottengo un elenco di ID di MyAnimeList che fanno match.
+		# Nota: nel JSON esterno la chiave corretta e' `tvdb_id`.
+		# Per stagione 0 (special/movie) considero anche tipi non TV.
 		mal_ids = []
 		for info in self._data:
-			if "thetvdb_id" not in info: continue
+			if "tvdb_id" not in info: continue
 			if "mal_id" not in info: continue
 			if "type" not in info: continue
-			if info["thetvdb_id"] != tvdb_id: continue
-			if info["type"] != "TV": continue
+			if info["tvdb_id"] != tvdb_id: continue
+
+			item_type = str(info["type"]).upper()
+			if season == 0:
+				if item_type == "TV":
+					continue
+			else:
+				if item_type != "TV":
+					continue
 
 			mal_ids.append(info["mal_id"])
 		
@@ -89,6 +98,13 @@ class ExternalDB:
 
 		# Riordino per data
 		res.sort(key=lambda x: (x["year"], x["season"]))
+
+		# Per stagione 0 prendo il primo risultato compatibile trovato
+		if season == 0:
+			return {
+				"name": res[0]["name"],
+				"url": res[0]["link"]
+			}
 
 		# Controllo se esiste la stagione
 		if len(res) < season: return None

@@ -219,6 +219,7 @@ class Processor:
 		def filterSeason(season:dict) -> bool:
 			"""Filtra le stagioni."""
 			season_number = str(season["number"])
+			season_number_int = season["number"] if isinstance(season["number"], int) else None
 			if table_entry and season_number in table_entry["seasons"]:
 				# Se la stagione è presente nella tabella
 				if len(table_entry["seasons"][season_number]) == 0:
@@ -248,7 +249,7 @@ class Processor:
 							res = self.external.find(title, season["number"], elem["tvdbId"])
 							if res is None:
 								# Se non ho trovato nulla provo con i titoli alternativi
-								alt_titles = getAlternativeTitles(elem['id'],season_number)
+								alt_titles = getAlternativeTitles(elem['id'], season_number_int)
 
 								for alt_title in alt_titles:
 									res = self.external.find(alt_title, season["number"], elem["tvdbId"])
