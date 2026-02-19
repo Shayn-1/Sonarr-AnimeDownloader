@@ -14,6 +14,9 @@ from typing import Callable, Any, List, Optional
 class Downloader:
 	"""Gestisce il corretto download degli episodi."""
 
+	DOWNLOAD_ATTEMPTS = 3
+	DOWNLOAD_RETRY_WAIT_SECONDS = 4
+
 	def __init__(self, settings:Settings, sonarr:Sonarr, connections:ConnectionsManager, folder:pathlib.Path):
 		"""
 		Args:
@@ -101,7 +104,7 @@ class Downloader:
 					self.log.warning(f"⏳ Download episodio S{episode['seasonNumber']}E{episode['episodeNumber']}.")
 
 					title = f'{serie["title"]} - S{episode["seasonNumber"]}E{episode["episodeNumber"]}'
-					file = episodio.download(title, self.folder, hook=self.hook)
+					file = self.__downloadWithRetry(episodio, title)
 
 					if not file:
 						self.log.warning(f"⚠️ Errore in fase di download.")
@@ -145,6 +148,35 @@ class Downloader:
 				self.log.info(f'⚠️ {e}')
 			except (aw.ServerNotSupported, aw.Error404) as e:
 				self.log.warning(cs.yellow(f"WARNING: {e}"))
+			except Exception as e:
+				self.log.exception(cs.red(
+					f"Errore imprevisto durante il download della serie '{serie['title']}' (stagione {season['number']}): {e}"
+				))
+
+	def __downloadWithRetry(self, episodio:aw.Episodio, title:str) -> Optional[str]:
+		"""Esegue il download con retry su errori di rete temporanei."""
+		last_error = None
+
+		for attempt in range(1, self.DOWNLOAD_ATTEMPTS + 1):
+			try:
+				return episodio.download(title, self.folder, hook=self.hook)
+			except (httpx.TimeoutException, httpx.TransportError) as e:
+				last_error = e
+				if attempt < self.DOWNLOAD_ATTEMPTS:
+					self.log.warning(
+						f"⚠️ Download fallito per timeout/rete (tentativo {attempt}/{self.DOWNLOAD_ATTEMPTS}). "
+						f"Nuovo tentativo tra {self.DOWNLOAD_RETRY_WAIT_SECONDS}s."
+					)
+					time.sleep(self.DOWNLOAD_RETRY_WAIT_SECONDS)
+				else:
+					self.log.error(
+						f"✖️ Download fallito dopo {self.DOWNLOAD_ATTEMPTS} tentativi per errore di rete: {e}"
+					)
+
+		if last_error:
+			return None
+
+		return None
 
 	def flattenEpisodes(self, base:list[aw.Episodio], elem:list[aw.Episodio]) -> list[aw.Episodio]:
 		"""
