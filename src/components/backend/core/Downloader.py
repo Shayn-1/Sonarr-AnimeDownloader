@@ -50,6 +50,8 @@ class Downloader:
 		  serie: dizionario con le informazioni
 		"""
 
+		downloaded = []  # episodi scaricati in questo batch
+
 		for season in serie["seasons"]:
 			try:
 				self.log.info(f"🔎 Ricerca serie '{serie['title']}' stagione {season['number']}.")
@@ -140,9 +142,8 @@ class Downloader:
 
 							self.log.info("✔️ Episodio rinominato.")
 					
-					# Invio una notifica tramite Connections
-					self.log.info('✉️ Inviando il messaggio tramite Connections.')
-					self.connections.send(f"*Episode Downloaded*\n{serie['title']} - {episode['seasonNumber']}x{episode['episodeNumber']} - {episode['title']}")
+					# Accumulo per notifica batch
+					downloaded.append(f"• {episode['seasonNumber']}x{str(episode['episodeNumber']).zfill(2)} - {episode['title']}")
 
 			except aw.AnimeNotAvailable as e:
 				self.log.info(f'⚠️ {e}')
@@ -177,6 +178,18 @@ class Downloader:
 			return None
 
 		return None
+
+
+		# Notifica batch al termine di tutti i season
+		if downloaded:
+			n = len(downloaded)
+			episodes_list = '\n'.join(downloaded)
+			self.log.info(f'✉️ Inviando notifica batch ({n} episodi) tramite Connections.')
+			self.connections.send(
+				f"*{n} {'episodio scaricato' if n == 1 else 'episodi scaricati'}*\n"
+				f"_{serie['title']}_\n"
+				f"{episodes_list}"
+			)
 
 	def flattenEpisodes(self, base:list[aw.Episodio], elem:list[aw.Episodio]) -> list[aw.Episodio]:
 		"""
