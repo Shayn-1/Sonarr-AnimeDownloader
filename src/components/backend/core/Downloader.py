@@ -1,4 +1,4 @@
-﻿from ..database import Settings
+from ..database import Settings
 from ..connection import ConnectionsManager, Sonarr
 from .Constant import LOGGER
 from ..utility import ColoredString as cs
@@ -154,6 +154,17 @@ class Downloader:
 					f"Errore imprevisto durante il download della serie '{serie['title']}' (stagione {season['number']}): {e}"
 				))
 
+
+		# Notifica batch al termine di tutti i season
+		if downloaded:
+			n = len(downloaded)
+			episodes_list = '\n'.join(downloaded)
+			self.log.info(f'✉️ Inviando notifica batch ({n} episodi) tramite Connections.')
+			self.connections.send(
+				f"*{n} {'episodio scaricato' if n == 1 else 'episodi scaricati'}*\n"
+				f"_{serie['title']}_\n"
+				f"{episodes_list}"
+			)
 	def __downloadWithRetry(self, episodio:aw.Episodio, title:str) -> Optional[str]:
 		"""Esegue il download con retry su errori di rete temporanei."""
 		last_error = None
@@ -180,16 +191,6 @@ class Downloader:
 		return None
 
 
-		# Notifica batch al termine di tutti i season
-		if downloaded:
-			n = len(downloaded)
-			episodes_list = '\n'.join(downloaded)
-			self.log.info(f'✉️ Inviando notifica batch ({n} episodi) tramite Connections.')
-			self.connections.send(
-				f"*{n} {'episodio scaricato' if n == 1 else 'episodi scaricati'}*\n"
-				f"_{serie['title']}_\n"
-				f"{episodes_list}"
-			)
 
 	def flattenEpisodes(self, base:list[aw.Episodio], elem:list[aw.Episodio]) -> list[aw.Episodio]:
 		"""
